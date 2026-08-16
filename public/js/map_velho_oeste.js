@@ -239,7 +239,7 @@ export function buildVelhoOeste(scene) {
     addSign(title, 'CASA DE MADEIRA', faceX - side * .14, 3.8, z, ry, 4.8, 1.25);
   }
   streetHouse(-1, -20, 'OFICINA', MAT.pale);
-  streetHouse(1, -20, 'CASA DO FERREIRO', MAT.wood);
+  streetHouse(1, -20, 'FERREIRO', MAT.wood);
   streetHouse(-1, 20, 'PENSÃO', MAT.blue);
   streetHouse(1, 20, 'CASA DO PISTOLEIRO', MAT.red);
 

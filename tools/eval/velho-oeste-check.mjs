@@ -17,6 +17,7 @@ const obstacles = named('obstaculo-');
 const wantedPosters = named('procurado-');
 const oldWestWindows = named('janela-oeste-');
 if (mutante === 'sem-saloon') buildings.splice(buildings.findIndex(o => o.name === 'predio-saloon'), 1);
+if (mutante === 'placa-longa') { const smith = buildings.find(o => o.name === 'predio-ferreiro'); if (smith) smith.name = 'predio-casa-do-ferreiro'; }
 if (mutante === 'sem-carrocas') wagons.length = 0;
 if (mutante === 'sem-tumbleweed') tumbleweeds.length = 0;
 if (mutante === 'sem-obstaculos-centrais') obstacles.length = 0;
@@ -29,7 +30,8 @@ if (mutante === 'sem-colisao-varanda') {
   world.colliders = world.colliders.filter(collider => !collider.tag?.startsWith('varanda-'));
 }
 
-const themeOk = buildings.length >= 8 && buildings.some(o => o.name === 'predio-saloon') && wagons.length >= 3;
+const themeOk = buildings.length >= 8 && buildings.some(o => o.name === 'predio-saloon')
+  && buildings.some(o => o.name === 'predio-ferreiro') && wagons.length >= 3;
 const tumbleweedOk = tumbleweeds.length >= 3 && typeof world.update === 'function';
 const before = tumbleweeds.map(o => o.position.clone());
 world.update?.(1, 2);

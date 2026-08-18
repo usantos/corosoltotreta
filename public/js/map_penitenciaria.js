@@ -115,6 +115,9 @@ export function buildPenitenciaria(scene) {
     blue: new THREE.MeshStandardMaterial({ color: 0x173f79, roughness: .5 }),
     black: new THREE.MeshStandardMaterial({ color: 0x111519, roughness: .66 }),
     glass: new THREE.MeshPhysicalMaterial({ color: 0x8fb2c0, roughness: .2, metalness: .1, transparent: true, opacity: .68, side: THREE.DoubleSide }),
+    interior: new THREE.MeshStandardMaterial({ color: 0x20272b, roughness: .9 }),
+    seat: new THREE.MeshStandardMaterial({ color: 0x263846, roughness: .94 }),
+    instrument: new THREE.MeshStandardMaterial({ color: 0x0b1013, roughness: .56, metalness: .16 }),
     rubber: new THREE.MeshStandardMaterial({ color: 0x17191a, roughness: .96 }),
     grass: new THREE.MeshStandardMaterial({ color: 0x52643c, roughness: 1 }),
     ammo: new THREE.MeshStandardMaterial({ map: tex.ammo, bumpMap: tex.ammo, bumpScale: .035, color: 0xffffff, roughness: .76, metalness: .18 }),
@@ -237,6 +240,26 @@ export function buildPenitenciaria(scene) {
     box(2.52,.16,1.22,MAT.blue,0,1.26,2.03,'penitenciaria-carro-porta-malas');
     mesh(taperedGeo(2.42,1.84,1.04,3.12,2.18,.05),MAT.white,0,1.77,.13,'penitenciaria-carro-cabine');
     box(1.94,.12,2.18,MAT.white,0,2.24,.18,'penitenciaria-carro-teto');
+
+    box(1.78,.12,2.52,MAT.interior,0,1.28,.12,'penitenciaria-carro-interior-forro');
+    box(1.66,.08,2.06,MAT.interior,0,2.12,.2,'penitenciaria-carro-interior-teto');
+    for(const sx of [-1,1]) {
+      box(.08,.42,2.34,MAT.interior,sx*.92,1.3,.17,`penitenciaria-carro-forro-porta-${sx}`);
+    }
+    box(1.72,.74,.08,MAT.interior,0,1.42,.43,'penitenciaria-carro-divisoria');
+    for(const sx of [-.57,-.19,.19,.57]) box(.035,.62,.055,MAT.chrome,sx,1.48,.37,`penitenciaria-carro-divisoria-grade-${sx}`);
+
+    for(const [seatId,sx,sz] of [['motorista',-.46,-.42],['passageiro',.46,-.42],['custodia-e',-.46,.78],['custodia-d',.46,.78]]) {
+      box(.66,.16,.62,MAT.seat,sx,1.39,sz,`penitenciaria-carro-banco-${seatId}-assento`);
+      box(.66,.68,.15,MAT.seat,sx,1.45,sz+.23,`penitenciaria-carro-banco-${seatId}-encosto`,-.08);
+      box(.36,.22,.14,MAT.seat,sx,1.98,sz+.25,`penitenciaria-carro-apoio-cabeca-${seatId}`);
+    }
+    box(1.72,.28,.42,MAT.instrument,0,1.38,-.96,'penitenciaria-carro-painel');
+    box(.62,.08,.2,MAT.black,-.43,1.7,-.91,'penitenciaria-carro-painel-instrumentos',-.12);
+    for(const sx of [-.55,-.31]) mesh(cylGeo(.035,.035,12),MAT.headlight,sx,1.75,-1.02,`penitenciaria-carro-painel-luz-${sx}`,Math.PI/2);
+    mesh(torusGeo(.25,.035,8,18),MAT.black,-.46,1.68,-.7,'penitenciaria-carro-volante',-.3);
+    mesh(cylGeo(.035,.34,10),MAT.chrome,-.46,1.55,-.79,'penitenciaria-carro-coluna-direcao',Math.PI/2);
+    box(.22,.3,.82,MAT.instrument,0,1.34,-.42,'penitenciaria-carro-console-central');
 
     mesh(planeGeo(1.86,.73),MAT.glass,0,1.85,-1.17,'penitenciaria-carro-vidro-frente',-.39);
     mesh(planeGeo(1.86,.7),MAT.glass,0,1.84,1.44,'penitenciaria-carro-vidro-traseiro',.39);

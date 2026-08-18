@@ -62,6 +62,23 @@ let policeCarVisualOk = policeCars.length >= 1 && policeCars.every(car => {
 });
 if (mutante === 'carro-quadrado') policeCarVisualOk = false;
 
+const carInteriorPrefixes = [
+  'penitenciaria-carro-interior-forro', 'penitenciaria-carro-banco-',
+  'penitenciaria-carro-painel', 'penitenciaria-carro-volante',
+  'penitenciaria-carro-divisoria', 'penitenciaria-carro-forro-porta-',
+];
+let policeCarInteriorOk = policeCars.length >= 1 && policeCars.every(car => {
+  const meshes = []; car.traverse(object => { if (object.isMesh) meshes.push(object); });
+  const interior = meshes.filter(object => carInteriorPrefixes.some(prefix => object.name.startsWith(prefix)));
+  const opaqueLiner = interior.some(object => object.name === 'penitenciaria-carro-interior-forro'
+    && object.material?.transparent !== true && (object.material?.opacity ?? 1) >= .95);
+  return opaqueLiner
+    && meshes.filter(object => object.name.startsWith('penitenciaria-carro-banco-')).length >= 8
+    && carInteriorPrefixes.slice(2).every(prefix => meshes.some(object => object.name.startsWith(prefix)))
+    && interior.every(object => Math.abs(object.position.x) <= 1.2 && object.position.z >= -1.45 && object.position.z <= 1.55);
+});
+if (mutante === 'carro-sem-interior') policeCarInteriorOk = false;
+
 const themeOk = cells.length >= 8 && benches.length >= 4 && bags.length >= 2
   && towers.length === 4 && fences.length >= 4 && dynamite.length >= 2 && policeCars.length >= 1;
 const yardOk = named('penitenciaria-patio').length === 1
@@ -99,4 +116,5 @@ console.log(`PEN3 ${obstaclesBlock && ammoTextureOk ? 'PASSA' : 'FALHA'} — ${a
 console.log(`PEN4 ${yardOk && arsenalOk && centerDensityOk ? 'PASSA' : 'FALHA'} — pátio sem campo · ${centerObstacles.length} obstáculos · ${centerWeapons.length} armas no miolo`);
 console.log(`PEN5 ${routesOk && ctfOk ? 'PASSA' : 'FALHA'} — ${nodes.length} nós · rota ${path.length} passos · 3 pontos CTF`);
 console.log(`PEN6 ${policeCarVisualOk ? 'PASSA' : 'FALHA'} — carro policial com carroceria afunilada e seis famílias de detalhe funcional`);
-process.exit(themeOk && cellsOpen && obstaclesBlock && ammoTextureOk && yardOk && arsenalOk && centerDensityOk && routesOk && ctfOk && policeCarVisualOk ? 0 : 1);
+console.log(`PEN7 ${policeCarInteriorOk ? 'PASSA' : 'FALHA'} — habitáculo opaco com bancos, painel, volante, divisória e forros de porta`);
+process.exit(themeOk && cellsOpen && obstaclesBlock && ammoTextureOk && yardOk && arsenalOk && centerDensityOk && routesOk && ctfOk && policeCarVisualOk && policeCarInteriorOk ? 0 : 1);

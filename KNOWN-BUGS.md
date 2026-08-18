@@ -2371,6 +2371,29 @@ publicação em potencial, e o `.gitignore` não protege de um deploy local.
 
 ## Relatos recentes e resolução
 
+- **~~BUG-74 · viatura da penitenciária desapareceu~~ · RESOLVIDO 18/08.** Palavras do
+  dono: *"O carro desapareceu"*. O processo de desenvolvimento estava aberto desde antes
+  da alteração e servia o manifesto de módulos congelado no boot. Depois de reiniciar o
+  Astro, a URL vigente de `map_penitenciaria.js` passou a entregar novamente
+  `policeCar(17, -25, -0.35)`, inclusive o interior novo. **Régua:** `PEN3`, `PEN6` e
+  `PEN7` confirmam colisão, carroceria e habitáculo; as três passam após o restart.
+
+- **~~BUG-73 · habitáculo da viatura da penitenciária está vazado~~ · RESOLVIDO 18/08.** Palavras do dono:
+  *"Melhore a viatura, renderize com mais detalhes pois esta dando pra ver dentro do veiculo."*
+  O `PEN6` passava porque cobrava apenas carroceria e detalhes externos; atrás dos seis
+  vidros transparentes não havia revestimento, bancos, painel, volante ou divisória. A nova
+  `PEN7` nasceu vermelha com **0/6 famílias internas**. Escurecer ou tornar o vidro opaco foi
+  descartado: esconderia o vazio sem modelar o carro e apagaria a leitura de para-brisa.
+  O habitáculo agora tem piso e teto internos, forros de porta, quatro bancos com encosto e
+  apoio de cabeça, painel com instrumentos, volante e coluna, console e divisória gradeada.
+  A captura no jogo real em 1280×720 mostrou a cabine escura e fechada, sem o mapa atravessando
+  para-brisa ou janelas; o vidro original continua transparente. Antes × depois: **49 → 77
+  malhas**, **2.112 → 2.824 triângulos**, com geometrias e materiais compartilhados.
+  Régua: `npm run eval:penitenciaria`, cláusula `PEN7`; o mutante
+  `--mutante=carro-sem-interior` deixa somente a PEN7 vermelha. Custo declarado: +28 malhas,
+  +712 triângulos e três materiais em um único obstáculo; colisor, oclusor, rota, armas e
+  downloads não mudaram.
+
 - **~~BUG-72 · carro da polícia da penitenciária está quadrado e sem detalhes~~ · RESOLVIDO 18/08.** Palavras do
   dono: *"Melhore o carro da policia, esta quadrado sem detalhes"*. A reprodução no builder
   real encontrou um único carro com 12 malhas: oito `BoxGeometry`, quatro rodas e nenhum

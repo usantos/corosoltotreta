@@ -34,6 +34,34 @@ world.root.traverse(object => {
 });
 if (mutante === 'sem-textura-municao') ammoTextures.clear();
 
+const carDetailPrefixes = [
+  'penitenciaria-carro-farol-', 'penitenciaria-carro-lanterna-',
+  'penitenciaria-carro-retrovisor-', 'penitenciaria-carro-parachoque-',
+  'penitenciaria-carro-aro-', 'penitenciaria-carro-decal-',
+];
+const tapered = object => {
+  const p = object.geometry?.attributes?.position;
+  if (!p || p.count < 8) return false;
+  let minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i < p.count; i++) { minY = Math.min(minY, p.getY(i)); maxY = Math.max(maxY, p.getY(i)); }
+  const span = (axis, target) => {
+    let min = Infinity, max = -Infinity;
+    for (let i = 0; i < p.count; i++) if (Math.abs(p.getY(i) - target) < 1e-4) {
+      const v = axis === 'x' ? p.getX(i) : p.getZ(i); min = Math.min(min, v); max = Math.max(max, v);
+    }
+    return max - min;
+  };
+  return Math.abs(span('x', minY) - span('x', maxY)) > .12
+    || Math.abs(span('z', minY) - span('z', maxY)) > .12;
+};
+let policeCarVisualOk = policeCars.length >= 1 && policeCars.every(car => {
+  const meshes = []; car.traverse(object => { if (object.isMesh) meshes.push(object); });
+  return meshes.length >= 30
+    && carDetailPrefixes.every(prefix => meshes.some(object => object.name.startsWith(prefix)))
+    && meshes.some(object => tapered(object));
+});
+if (mutante === 'carro-quadrado') policeCarVisualOk = false;
+
 const themeOk = cells.length >= 8 && benches.length >= 4 && bags.length >= 2
   && towers.length === 4 && fences.length >= 4 && dynamite.length >= 2 && policeCars.length >= 1;
 const yardOk = named('penitenciaria-patio').length === 1
@@ -70,4 +98,5 @@ console.log(`PEN2 ${cellsOpen ? 'PASSA' : 'FALHA'} — ${cells.length} celas com
 console.log(`PEN3 ${obstaclesBlock && ammoTextureOk ? 'PASSA' : 'FALHA'} — ${ammo.length} caixas de munição texturizadas + ${policeCars.length} carro policial com colisão`);
 console.log(`PEN4 ${yardOk && arsenalOk && centerDensityOk ? 'PASSA' : 'FALHA'} — pátio sem campo · ${centerObstacles.length} obstáculos · ${centerWeapons.length} armas no miolo`);
 console.log(`PEN5 ${routesOk && ctfOk ? 'PASSA' : 'FALHA'} — ${nodes.length} nós · rota ${path.length} passos · 3 pontos CTF`);
-process.exit(themeOk && cellsOpen && obstaclesBlock && ammoTextureOk && yardOk && arsenalOk && centerDensityOk && routesOk && ctfOk ? 0 : 1);
+console.log(`PEN6 ${policeCarVisualOk ? 'PASSA' : 'FALHA'} — carro policial com carroceria afunilada e seis famílias de detalhe funcional`);
+process.exit(themeOk && cellsOpen && obstaclesBlock && ammoTextureOk && yardOk && arsenalOk && centerDensityOk && routesOk && ctfOk && policeCarVisualOk ? 0 : 1);

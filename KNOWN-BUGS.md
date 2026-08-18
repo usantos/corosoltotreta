@@ -2371,6 +2371,22 @@ publicação em potencial, e o `.gitignore` não protege de um deploy local.
 
 ## Relatos recentes e resolução
 
+- **~~BUG-72 · carro da polícia da penitenciária está quadrado e sem detalhes~~ · RESOLVIDO 18/08.** Palavras do
+  dono: *"Melhore o carro da policia, esta quadrado sem detalhes"*. A reprodução no builder
+  real encontrou um único carro com 12 malhas: oito `BoxGeometry`, quatro rodas e nenhum
+  filho nomeado como farol, lanterna, retrovisor, para-choque, aro ou identificação lateral.
+  A colisão já acompanhava a área ocupada: `PEN3` passou antes, refutando a hipótese de que
+  o bloco visual exigia mexer no obstáculo jogável. O carro agora usa carroceria e cabine
+  afuniladas, teto, seis vidros, rodas com aro e para-lama, faróis, lanternas, retrovisores,
+  para-choques, grade, placas, maçanetas, decal original `POLÍCIA PENAL`, giroflex e antena.
+  A captura em 1280×720 detectou para-brisas salientes na primeira tentativa; planos
+  encaixados e pilares corrigiram a silhueta. Antes × depois: **12 → 49 malhas** e **352 →
+  2.112 triângulos**; a versão final compartilha geometrias repetidas e usa 25 geometrias,
+  11 materiais e uma textura procedural. Colisor e oclusor permanecem registrados. Régua:
+  `npm run eval:penitenciaria`, cláusula `PEN6`; `--mutante=carro-quadrado` deixa PEN6
+  vermelha e preserva PEN1–PEN5. Custo declarado: +37 malhas e +1.760 triângulos em um
+  único obstáculo, sem arquivo, download, colisor ou textura externa adicional.
+
 - **~~BUG-71 · janelas ainda têm vidro e cartazes não flexionam “perigoso”~~ · RESOLVIDO 16/08.**
   Palavras do dono: *"As janelas devem ser totalmente de madeira, janelas abertas e fechadas,
   e os cartazes os textos devem ter perigoso se for homem ou perigosa pra mulher, e os valores

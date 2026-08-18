@@ -20,6 +20,31 @@ export function buildPenitenciaria(scene) {
     if (!geometryCache.has(key)) geometryCache.set(key, new THREE.CylinderGeometry(r, r, h, segments));
     return geometryCache.get(key);
   };
+  const planeGeo = (w, h) => {
+    const key = `p:${w}:${h}`;
+    if (!geometryCache.has(key)) geometryCache.set(key, new THREE.PlaneGeometry(w, h));
+    return geometryCache.get(key);
+  };
+  const torusGeo = (r, tube, radial = 8, tubular = 18) => {
+    const key = `o:${r}:${tube}:${radial}:${tubular}`;
+    if (!geometryCache.has(key)) geometryCache.set(key, new THREE.TorusGeometry(r, tube, radial, tubular));
+    return geometryCache.get(key);
+  };
+  const taperedGeo = (wb, wt, h, db, dt, topZ = 0) => {
+    const key = `t:${wb}:${wt}:${h}:${db}:${dt}:${topZ}`;
+    if (!geometryCache.has(key)) {
+      const xb = wb / 2, xt = wt / 2, zb = db / 2, zt = dt / 2;
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+        -xb, -h/2, -zb, xb, -h/2, -zb, xb, -h/2, zb, -xb, -h/2, zb,
+        -xt, h/2, topZ-zt, xt, h/2, topZ-zt, xt, h/2, topZ+zt, -xt, h/2, topZ+zt,
+      ], 3));
+      geometry.setIndex([0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7]);
+      geometry.computeVertexNormals();
+      geometryCache.set(key, geometry);
+    }
+    return geometryCache.get(key);
+  };
   function proceduralTexture(name, base, detail, mode, repeatX = 4, repeatY = repeatX) {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128;
     const ctx = canvas.getContext('2d'); ctx.fillStyle = base; ctx.fillRect(0, 0, 128, 128);
@@ -60,12 +85,23 @@ export function buildPenitenciaria(scene) {
     const texture = new THREE.CanvasTexture(canvas); texture.name='penitenciaria-caixa-municao'; texture.colorSpace=THREE.SRGBColorSpace;
     texture.wrapS=texture.wrapT=THREE.RepeatWrapping; texture.anisotropy=8; return texture;
   }
+  function policeDecalTexture() {
+    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+    const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,512,128);
+    ctx.fillStyle='#102f5d'; ctx.fillRect(0,8,512,112); ctx.strokeStyle='#d9b855'; ctx.lineWidth=8; ctx.strokeRect(7,15,498,98);
+    ctx.fillStyle='#d9b855'; ctx.beginPath(); ctx.moveTo(55,26);ctx.lineTo(86,40);ctx.lineTo(79,87);ctx.lineTo(55,106);ctx.lineTo(31,87);ctx.lineTo(24,40);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#102f5d';ctx.beginPath();ctx.arc(55,63,13,0,Math.PI*2);ctx.fill();ctx.fillRect(50,58,10,33);
+    ctx.fillStyle='#f3ead0';ctx.textAlign='left';ctx.textBaseline='middle';ctx.font='900 43px Arial,sans-serif';ctx.fillText('POLÍCIA PENAL',106,59);
+    ctx.fillStyle='#d9b855';ctx.font='900 25px Arial,sans-serif';ctx.fillText('190  ·  ESCOLTA',108,94);
+    const texture = new THREE.CanvasTexture(canvas); texture.name='penitenciaria-carro-decal'; texture.colorSpace=THREE.SRGBColorSpace; texture.anisotropy=8; return texture;
+  }
   const tex = {
     concrete: proceduralTexture('penitenciaria-concreto', '#777b78', '#343936', 'concrete', 6),
     darkConcrete: proceduralTexture('penitenciaria-concreto-escuro', '#343a3b', '#15191a', 'concrete', 5),
     yard: proceduralTexture('penitenciaria-patio-concreto-gasto', '#555957', '#262a29', 'concrete', 8),
     steel: proceduralTexture('penitenciaria-aco-enferrujado', '#565d5e', '#8b6b49', 'metal', 3),
     ammo: ammoCrateTexture(),
+    policeDecal: policeDecalTexture(),
   };
   const MAT = {
     concrete: new THREE.MeshStandardMaterial({ map: tex.concrete, bumpMap: tex.concrete, bumpScale: .045, color: 0xb8bbb5, roughness: .93 }),
@@ -78,10 +114,15 @@ export function buildPenitenciaria(scene) {
     red: new THREE.MeshStandardMaterial({ color: 0xb42d25, roughness: .65 }),
     blue: new THREE.MeshStandardMaterial({ color: 0x173f79, roughness: .5 }),
     black: new THREE.MeshStandardMaterial({ color: 0x111519, roughness: .66 }),
-    glass: new THREE.MeshPhysicalMaterial({ color: 0x8fb2c0, roughness: .2, metalness: .1, transparent: true, opacity: .68 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0x8fb2c0, roughness: .2, metalness: .1, transparent: true, opacity: .68, side: THREE.DoubleSide }),
     rubber: new THREE.MeshStandardMaterial({ color: 0x17191a, roughness: .96 }),
     grass: new THREE.MeshStandardMaterial({ color: 0x52643c, roughness: 1 }),
     ammo: new THREE.MeshStandardMaterial({ map: tex.ammo, bumpMap: tex.ammo, bumpScale: .035, color: 0xffffff, roughness: .76, metalness: .18 }),
+    chrome: new THREE.MeshStandardMaterial({ color: 0xbac2c3, metalness: .9, roughness: .22 }),
+    rim: new THREE.MeshStandardMaterial({ color: 0x939b9d, metalness: .82, roughness: .3 }),
+    headlight: new THREE.MeshStandardMaterial({ color: 0xf2f1d5, emissive: 0xffe8a3, emissiveIntensity: .55, roughness: .25 }),
+    taillight: new THREE.MeshStandardMaterial({ color: 0x991b18, emissive: 0x5f0907, emissiveIntensity: .45, roughness: .28 }),
+    policeDecal: new THREE.MeshBasicMaterial({ map: tex.policeDecal, transparent: true, side: THREE.DoubleSide }),
   };
   function addBox(w, h, d, material, x, y, z, opts = {}) {
     const mesh = new THREE.Mesh(boxGeo(w, h, d), material); mesh.position.set(x, y + h / 2, z);
@@ -189,11 +230,48 @@ export function buildPenitenciaria(scene) {
 
   function policeCar(x,z,ry) {
     const group = new THREE.Group(); group.name = 'penitenciaria-carro-policia'; group.position.set(x,0,z); group.rotation.y=ry; root.add(group);
-    const part=(w,h,d,m,px,py,pz)=>{const mesh=new THREE.Mesh(boxGeo(w,h,d),m);mesh.position.set(px,py+h/2,pz);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;};
-    part(2.7,.75,5.4,MAT.white,0,.55,0); part(2.55,.12,3.4,MAT.blue,0,1.05,0); part(2.35,1.05,2.65,MAT.white,0,1.12,.05);
-    part(2.38,.72,.08,MAT.glass,0,1.35,-1.35); part(2.38,.72,.08,MAT.glass,0,1.35,1.35);
-    for(const sx of [-1,1]) for(const sz of [-1.75,1.75]) { const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.28,16),MAT.rubber);wheel.rotation.z=Math.PI/2;wheel.position.set(sx*1.35,.55,sz);group.add(wheel); }
-    part(1.45,.18,.28,MAT.black,0,2.2,0); part(.65,.22,.3,MAT.red,-.42,2.35,0); part(.65,.22,.3,MAT.blue,.42,2.35,0);
+    const mesh=(geometry,material,px,py,pz,name,rx=0,ry2=0,rz=0)=>{const object=new THREE.Mesh(geometry,material);object.name=name;object.position.set(px,py,pz);object.rotation.set(rx,ry2,rz);object.castShadow=true;object.receiveShadow=true;group.add(object);return object;};
+    const box=(w,h,d,material,px,base,pz,name,rx=0,ry2=0,rz=0)=>mesh(boxGeo(w,h,d),material,px,base+h/2,pz,name,rx,ry2,rz);
+    mesh(taperedGeo(2.82,2.58,.78,5.42,5.08),MAT.white,0,.94,0,'penitenciaria-carro-lataria');
+    box(2.55,.17,2.05,MAT.blue,0,1.28,-1.66,'penitenciaria-carro-capo');
+    box(2.52,.16,1.22,MAT.blue,0,1.26,2.03,'penitenciaria-carro-porta-malas');
+    mesh(taperedGeo(2.42,1.84,1.04,3.12,2.18,.05),MAT.white,0,1.77,.13,'penitenciaria-carro-cabine');
+    box(1.94,.12,2.18,MAT.white,0,2.24,.18,'penitenciaria-carro-teto');
+
+    mesh(planeGeo(1.86,.73),MAT.glass,0,1.85,-1.17,'penitenciaria-carro-vidro-frente',-.39);
+    mesh(planeGeo(1.86,.7),MAT.glass,0,1.84,1.44,'penitenciaria-carro-vidro-traseiro',.39);
+    for(const sx of [-1,1]) {
+      mesh(planeGeo(.94,.62),MAT.glass,sx*1.085,1.83,-.48,`penitenciaria-carro-vidro-lateral-${sx}-frente`,0,sx*Math.PI/2);
+      mesh(planeGeo(.86,.62),MAT.glass,sx*1.085,1.83,.66,`penitenciaria-carro-vidro-lateral-${sx}-tras`,0,sx*Math.PI/2);
+      box(.055,.72,.09,MAT.black,sx*1.09,1.47,.11,`penitenciaria-carro-pilar-${sx}`);
+      box(.24,.13,.34,MAT.black,sx*1.42,1.5,-1.02,`penitenciaria-carro-retrovisor-${sx}`);
+      for(const [doorZ,i] of [[-.42,0],[.72,1]]) {
+        box(.035,.055,.34,MAT.chrome,sx*1.39,1.23,doorZ,`penitenciaria-carro-macaneta-${sx}-${i}`);
+      }
+      const decal=mesh(planeGeo(2.05,.5),MAT.policeDecal,sx*1.421,1.12,.18,`penitenciaria-carro-decal-${sx}`,0,sx*Math.PI/2,0);decal.castShadow=false;
+    }
+
+    for(const sx of [-1,1]) for(const [sz,axle] of [[-1.76,'dianteiro'],[1.78,'traseiro']]) {
+      mesh(cylGeo(.5,.3,20),MAT.rubber,sx*1.38,.52,sz,`penitenciaria-carro-pneu-${sx}-${axle}`,0,0,Math.PI/2);
+      mesh(cylGeo(.29,.315,16),MAT.rim,sx*1.385,.52,sz,`penitenciaria-carro-aro-${sx}-${axle}`,0,0,Math.PI/2);
+      mesh(torusGeo(.52,.055),MAT.black,sx*1.405,.56,sz,`penitenciaria-carro-paralama-${sx}-${axle}`,0,Math.PI/2,0);
+    }
+
+    box(2.72,.23,.22,MAT.black,0,.47,-2.71,'penitenciaria-carro-parachoque-frente');
+    box(2.72,.23,.22,MAT.black,0,.47,2.71,'penitenciaria-carro-parachoque-traseiro');
+    for(const sx of [-1,1]) {
+      box(.68,.28,.09,MAT.headlight,sx*.82,.85,-2.575,`penitenciaria-carro-farol-${sx}`);
+      box(.58,.3,.09,MAT.taillight,sx*.87,.86,2.575,`penitenciaria-carro-lanterna-${sx}`);
+    }
+    box(1.25,.32,.08,MAT.black,0,.75,-2.59,'penitenciaria-carro-grade');
+    for(const sx of [-.42,0,.42]) box(.06,.27,.035,MAT.chrome,sx,.77,-2.64,`penitenciaria-carro-grade-filete-${sx}`);
+    box(.72,.19,.045,MAT.black,0,.52,-2.84,'penitenciaria-carro-placa-frente');
+    box(.72,.19,.045,MAT.black,0,.52,2.84,'penitenciaria-carro-placa-traseira');
+
+    box(1.55,.12,.34,MAT.black,0,2.29,.05,'penitenciaria-carro-giroflex-base');
+    box(.68,.21,.31,MAT.red,-.4,2.39,.05,'penitenciaria-carro-giroflex-vermelho');
+    box(.68,.21,.31,MAT.blue,.4,2.39,.05,'penitenciaria-carro-giroflex-azul');
+    mesh(cylGeo(.025,.72,8),MAT.black,.73,2.58,.83,'penitenciaria-carro-antena',0,0,-.17);
     const hx=Math.abs(Math.cos(ry))*1.55+Math.abs(Math.sin(ry))*2.8,hz=Math.abs(Math.sin(ry))*1.55+Math.abs(Math.cos(ry))*2.8;
     const collider={minX:x-hx,maxX:x+hx,minY:0,maxY:2.5,minZ:z-hz,maxZ:z+hz,tag:'carro-policia'};colliders.push(collider);group.userData.collider=collider;occluders.push(group);
   }
